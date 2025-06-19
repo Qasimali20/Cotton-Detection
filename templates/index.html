@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotton Yield Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: url('/static/images/field1.jpg') center/cover fixed no-repeat;
+            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            color: #1f2937;
+        }
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6));
+            color: white;
+            padding: 5rem 2rem;
+        }
+        .dropzone {
+            border: 2px dashed #6b7280;
+            background: rgba(255, 255, 255, 0.95);
+            transition: all 0.3s ease;
+            border-radius: 12px;
+        }
+        .dropzone:hover {
+            border-color: #15803d;
+            background: rgba(240, 253, 244, 0.95);
+            transform: scale(1.02);
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+        }
+        .btn-primary {
+            background-color: #15803d;
+            color: white;
+            border-radius: 8px;
+            padding: 12px 24px;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #166534;
+        }
+        .summary-card {
+            background: rgba(254, 252, 232, 0.95);
+            border-radius: 12px;
+            border: 1px solid #d1d5db;
+        }
+        .section-bg {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+        }
+        footer {
+            background: rgba(26, 46, 5, 0.95);
+            color: #e5e7eb;
+            padding: 3rem 2rem;
+        }
+        .faq-item {
+            background: rgba(249, 250, 251, 0.95);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        #file-preview {
+            max-height: 200px;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased">
+    <div class="flex flex-col min-h-screen">
+        <!-- Hero Section -->
+        <section class="hero text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Cotton Yield Predictor</h1>
+            <p class="text-lg md:text-xl max-w-2xl mx-auto mb-6">Grow smarter with instant yield estimates. Upload a photo of your cotton field to plan your harvest with confidence.</p>
+            <a href="#upload" class="btn-primary inline-block">Try Now</a>
+        </section>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 py-12 flex-grow">
+            <!-- About Section -->
+            <section class="mb-12 section-bg p-8 text-center">
+                <h2 class="text-2xl md:text-3xl font-semibold mb-4">Why Predict Your Cotton Yield?</h2>
+                <p class="text-gray-600 max-w-3xl mx-auto">Maximize your farm’s potential with our easy-to-use tool. By analyzing your cotton field photos, we count buds, flowers, and bolls to estimate your yield, helping you plan sales, manage resources, and boost productivity.</p>
+            </section>
+
+            {% if uploaded %}
+            <!-- Results Section -->
+            <section class="mb-12">
+                <h2 class="text-2xl font-semibold text-center mb-8 text-white">Your Field Analysis</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="card overflow-hidden">
+                        <h3 class="text-lg font-semibold p-4 bg-green-50">Your Field Photo</h3>
+                        <img src="{{ original_img }}" alt="Uploaded Image" class="w-full h-96 object-contain">
+                    </div>
+                    <div class="card overflow-hidden">
+                        <h3 class="text-lg font-semibold p-4 bg-green-50">Detected Features</h3>
+                        <img src="{{ result_img }}" alt="Result Image" class="w-full h-96 object-contain">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Summary Section -->
+            <section class="mb-12">
+                <div class="summary-card p-8 max-w-xl mx-auto">
+                    <h2 class="text-2xl font-semibold mb-6 text-center">Harvest Estimate</h2>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="text-center">
+                            <p class="text-sm text-gray-600">Cotton Buds</p>
+                            <p class="text-3xl font-bold text-green-700">{{ counts['bud'] }}</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm text-gray-600">Cotton Flowers</p>
+                            <p class="text-3xl font-bold text-green-700">{{ counts['flower'] }}</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm text-gray-600">Cotton Bolls</p>
+                            <p class="text-3xl font-bold text-green-700">{{ counts['cotton'] }}</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm text-gray-600">Est. Yield</p>
+                            <p class="text-3xl font-bold text-green-700">{{ estimated_yield }} g</p>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('index') }}" class="block mt-8 text-center btn-primary py-3 rounded-lg">Analyze Another Photo</a>
+                </div>
+            </section>
+            {% else %}
+            <!-- Upload Section -->
+            <section id="upload" class="mb-12">
+                <div class="max-w-lg mx-auto">
+                    <div class="card p-8">
+                        <h2 class="text-2xl font-semibold mb-6 text-center">Upload Your Cotton Field Photo</h2>
+                        <form id="upload-form" method="POST" enctype="multipart/form-data" class="space-y-6">
+                            <div class="dropzone p-8 text-center cursor-pointer" id="dropzone" onclick="document.getElementById('image').click()">
+                                <input type="file" name="image" id="image" accept="image/*" class="hidden">
+                                <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" id="upload-icon">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                <p class="mt-3 text-sm text-gray-600" id="upload-text">Drag and drop your cotton field photo here or click to select</p>
+                                <div id="preview-container" class="hidden mt-4">
+                                    <img id="file-preview" alt="File Preview">
+                                    <p class="mt-2 text-sm text-green-600 font-semibold" id="upload-message">File Uploaded Successfully!</p>
+                                </div>
+                                <p class="mt-2 text-sm text-red-600 font-semibold hidden" id="error-message">File not uploaded. Please upload a photo to proceed.</p>
+                            </div>
+                            <button type="submit" class="w-full btn-primary" id="analyze-button">Estimate My Yield</button>
+                        </form>
+                    </div>
+                    <div class="mt-6 section-bg rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-3">Tips for Accurate Results</h3>
+                        <ul class="list-disc list-inside text-gray-600 text-sm space-y-2">
+                            <li>Take a clear, daytime photo of your cotton field.</li>
+                            <li>Include multiple plants in a wide shot for better analysis.</li>
+                            <li>Avoid blurry images or low-light conditions.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- FAQ Section -->
+            <section class="mb-12 section-bg p-8">
+                <h2 class="text-2xl font-semibold text-center mb-8">Frequently Asked Questions</h2>
+                <div class="max-w-3xl mx-auto space-y-4">
+                    <div class="faq-item">
+                        <h3 class="text-lg font-semibold">How accurate is the yield prediction?</h3>
+                        <p class="text-gray-600 text-sm">Our tool uses advanced image analysis to provide reliable estimates based on visible buds, flowers, and bolls. Accuracy depends on photo quality and field conditions.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3 class="text-lg font-semibold">What types of cotton fields work best?</h3>
+                        <p class="text-gray-600 text-sm">The tool performs best with clear photos of cotton fields at any growth stage. Ensure good lighting and minimal obstructions like weeds or shadows.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3 class="text-lg font-semibold">Can I use this on my phone?</h3>
+                        <p class="text-gray-600 text-sm">Absolutely! Our platform is optimized for mobile devices. Snap a photo with your smartphone and upload it directly to get your yield estimate.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center">
+            <h3 class="text-xl font-semibold mb-3">Empowering Cotton Farmers</h3>
+            <p class="text-gray-300 text-sm max-w-2xl mx-auto mb-4">Our Cotton Yield Predictor is designed to help farmers like you make informed decisions. Estimate your yield, plan your harvest, and grow with confidence using cutting-edge technology.</p>
+            <p class="text-gray-400 text-sm">© 2025 Cotton Yield Predictor. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        const dropzone = document.querySelector('#dropzone');
+        const input = document.querySelector('#image');
+        const uploadIcon = document.querySelector('#upload-icon');
+        const uploadText = document.querySelector('#upload-text');
+        const previewContainer = document.querySelector('#preview-container');
+        const filePreview = document.querySelector('#file-preview');
+        const uploadMessage = document.querySelector('#upload-message');
+        const errorMessage = document.querySelector('#error-message');
+        const form = document.querySelector('#upload-form');
+
+        function handleFileSelect(file) {
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    filePreview.src = e.target.result;
+                    uploadIcon.classList.add('hidden');
+                    uploadText.classList.add('hidden');
+                    previewContainer.classList.remove('hidden');
+                    uploadMessage.classList.remove('hidden');
+                    errorMessage.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('border-green-600', 'bg-green-50');
+        });
+
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-green-600', 'bg-green-50');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-green-600', 'bg-green-50');
+            input.files = e.dataTransfer.files;
+            handleFileSelect(input.files[0]);
+        });
+
+        input.addEventListener('change', () => {
+            handleFileSelect(input.files[0]);
+        });
+
+        form.addEventListener('submit', (e) => {
+            if (!input.files || input.files.length === 0) {
+                e.preventDefault();
+                errorMessage.classList.remove('hidden');
+                previewContainer.classList.add('hidden');
+                uploadIcon.classList.remove('hidden');
+                uploadText.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

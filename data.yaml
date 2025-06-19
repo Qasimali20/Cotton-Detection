@@ -1,0 +1,13 @@
+train: C:\Users\walee\Desktop\yolo test\Cotton Detection.v1i.yolov12\train\images
+val: C:\Users\walee\Desktop\yolo test\Cotton Detection.v1i.yolov12\valid\images
+test: C:\Users\walee\Desktop\yolo test\Cotton Detection.v1i.yolov12\test\images
+
+nc: 3
+names: ['bud', 'cotton', 'flower']
+
+roboflow:
+  workspace: cotton-buds-and-flowers-dataset
+  project: cotton-detection-wwfo7
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/cotton-buds-and-flowers-dataset/cotton-detection-wwfo7/dataset/1
